@@ -103,10 +103,6 @@ namespace SimLoadX
 
         public MainViewModel()
         {
-            _resultStream = new Subject<Tuple<double, double>>();
-            _resultStream.SampleByInterval(TimeSpan.FromSeconds(1))
-                         .Subscribe(UpdatePerformanceValue);
-
             // Set defaults
             PerformanceValue = double.NaN.ToString();
             NumberOfTasks = "8";
@@ -114,7 +110,6 @@ namespace SimLoadX
             PseudoResult = double.NaN.ToString();
             DataPacketSizeExponent = 12;
             IsConfigurable = true;
-            _points = SetPoints();
 
             // Set commands
             StartBenchCommand = new DelegateCommand(OnStartBenchmark);
@@ -144,22 +139,10 @@ namespace SimLoadX
             _lcts = new LimitedConcurrencyLevelTaskScheduler(Convert.ToInt32(NumberOfCores));
             _factory = new TaskFactory(_lcts);
             _cts = new CancellationTokenSource();
-            //var context = SynchronizationContext.Current;
 
-            //_disposableSequence?.Dispose();
-            //_disposableSequence = Observable.Generate( 0, // initialState
-            //                                           x => true, //condition
-            //                                           x => x, //iterate
-            //                                           x => x, //resultSelector
-            //                                           x => TimeSpan.FromMilliseconds(_pushRate))
-            //                                   .Select(x =>
-            //                                   {
-            //                                       return HandleCurrentPaket();
-            //                                   })
-            //                                   .ObserveOn(context)
-            //                                   .SubscribeOn(context)
-            //                                   .Buffer(50)
-            //                                   .Subscribe(UpdatePerformanceValue);
+            _disposableSequence?.Dispose();
+            _resultStream = new Subject<Tuple<double, double>>();
+            _disposableSequence = _resultStream.SampleByInterval(TimeSpan.FromSeconds(1)).Subscribe(UpdatePerformanceValue);
 
             try
             {
@@ -183,7 +166,7 @@ namespace SimLoadX
             if (x == null)
                 return;
 
-            PerformanceValue = Math.Round(1E03 / x.Item1, 2).ToString();
+            PerformanceValue = Math.Round(1E06 / x.Item1, 2).ToString();
             PseudoResult = Math.Round(x.Item2, 2).ToString();
         }
 
@@ -196,6 +179,11 @@ namespace SimLoadX
 
             for (int tCtr = 0; tCtr < Convert.ToInt32(NumberOfTasks); tCtr++)
             {
+                if (!UseLocalData)
+                {
+                    _points = SetPoints();
+                }
+
                 Task<float> task = _factory.StartNew(() =>
                 {
                     if (!UseLocalData)
@@ -205,7 +193,7 @@ namespace SimLoadX
                             var copyPoints = new Coordinate[_points.Length];
                             Array.Copy(_points, copyPoints, _points.Length);
 
-                            return GetDistance(UseCopyData ? copyPoints : _points);
+                            return GetDistance(copyPoints);
                         }
                         else
                         {
@@ -214,13 +202,14 @@ namespace SimLoadX
                     }
                     else
                     {
+                        var threadSafeRandom = new ThreadSafeRandom();
                         int numberOfPoints = (int)Math.Pow(2, DataPacketSizeExponent);
                         var path = new Coordinate[numberOfPoints];
 
                         for (int i = 0; i < numberOfPoints; i++)
                         {
-                            double x = _random.NextDouble() * 1E03;
-                            double y = _random.NextDouble() * 1E03;
+                            double x = threadSafeRandom.NextDouble() * 1E03;
+                            double y = threadSafeRandom.NextDouble() * 1E03;
 
                             path[i] = new Coordinate((float)x, (float)y);
                         }
@@ -235,11 +224,11 @@ namespace SimLoadX
 
             Task.WaitAll(_tasks.ToArray());
 
-            stopwatch.Stop();
-
             var minLength = _tasks.Select(t => t.Result).Min();
 
-            return new Tuple<double, double>(stopwatch.ElapsedMilliseconds, minLength);
+            stopwatch.Stop();
+
+            return new Tuple<double, double>(stopwatch.ElapsedTicks, minLength);
         }
 
         //[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -283,9 +272,9 @@ namespace SimLoadX
         private void OnStopBenchmark()
         {
             _cts?.Cancel();
+            _disposableSequence?.Dispose();
             PseudoResult = "Benchmark aborted";
             IsConfigurable = true;
-            //_disposableSequence?.Dispose();
         }
 
         private void OnDataPacketSizeChanged(object value)
