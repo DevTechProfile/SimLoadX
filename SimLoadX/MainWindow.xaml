@@ -1,0 +1,58 @@
+﻿<Window x:Class="SimLoadX.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SimLoadX"
+        mc:Ignorable="d"
+        Title="Simulated Workload" Height="512" Width="768">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="200" />
+        </Grid.RowDefinitions>
+        <Label Margin="5" FontSize="12" Content="{Binding PseudoResult}"/>
+        <DockPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Label DockPanel.Dock="Left" FontSize="20" Content="Performance:"/>
+            <Label DockPanel.Dock="Right" FontSize="20" Content="{Binding PerformanceValue}"/>
+        </DockPanel>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1" Orientation="Horizontal">
+            <Button IsEnabled="{Binding IsConfigurable}" Content="Start" Height="50" Width="80" Command="{Binding Path=StartBenchCommand}"></Button>
+            <Button Content="Stop" Margin="20 0 0 0" Height="50" Width="80" Command="{Binding Path=StopStopCommand}"></Button>
+            <DockPanel DockPanel.Dock="Right" Margin="20 0 0 0">
+                <Label DockPanel.Dock="Top" HorizontalAlignment="Center" FontWeight="Bold" Content="{Binding DataPacketSize}"></Label>
+                <Label DockPanel.Dock="Left" VerticalAlignment="Center" FontWeight="Bold">Data packet size:</Label>
+                <Slider local:SliderValueChangedBehaviour.Command="{Binding DataPacketSizeChangedCommand}" VerticalAlignment="Center" Width="200"
+                        IsEnabled="{Binding IsConfigurable}"
+                        Minimum="12"
+                        Maximum="23"
+                        Value="1"
+                        IsSnapToTickEnabled="True"
+                        TickFrequency="1"/>
+            </DockPanel>
+
+            <GroupBox IsEnabled="{Binding IsConfigurable}" Margin="20 0 0 0" Header="Benchmark options" FontSize="16" >
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="1*" />
+                        <RowDefinition Height="1*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1*"/>
+                        <ColumnDefinition Width="1*"/>
+                    </Grid.ColumnDefinitions>
+                    <Label FontSize="12" Grid.Row="0" Grid.Column="0" VerticalAlignment="Center" Content="Number of tasks"></Label>
+                    <TextBox FontSize="12" HorizontalAlignment="Left" Grid.Row="0" Grid.Column="1" Width="30" Height="20" TextAlignment="Center" Text="{Binding NumberOfTasks}"></TextBox>
+                    <Label FontSize="12" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Content="Number of cores"></Label>
+                    <TextBox FontSize="12" HorizontalAlignment="Left" Grid.Row="1" Grid.Column="1" Width="30" Height="20" TextAlignment="Center" Text="{Binding NumberOfCores}"></TextBox>
+                    <Label FontSize="12" Grid.Row="2" Grid.Column="0" VerticalAlignment="Center" Content="Use local data"></Label>
+                    <CheckBox FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="2" Grid.Column="1" IsChecked="{Binding UseLocalData}"></CheckBox>
+                    <Label FontSize="12" Grid.Row="3" Grid.Column="0" VerticalAlignment="Center" Content="Copy data"></Label>
+                    <CheckBox FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Left" Grid.Row="3" Grid.Column="1" IsChecked="{Binding UseCopyData}"></CheckBox>
+                </Grid>
+            </GroupBox>
+        </StackPanel>
+    </Grid>
+</Window>
