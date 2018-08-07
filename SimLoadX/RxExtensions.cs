@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 
 namespace SimLoadX
@@ -11,7 +12,7 @@ namespace SimLoadX
                                         x => true, //condition
                                         x => x, //iterate
                                         x => x, //resultSelector
-                                        x => interval).CombineWithLatest(observable, (clock, element) => element);
+                                        x => interval).ObserveOn(new EventLoopScheduler()).CombineWithLatest(observable, (clock, element) => element);
         }
 
         /// <summary>

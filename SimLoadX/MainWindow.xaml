@@ -4,6 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SimLoadX"
+        xmlns:lvc="clr-namespace:LiveCharts.Wpf;assembly=LiveCharts.Wpf"
+        xmlns:geared="clr-namespace:LiveCharts.Geared;assembly=LiveCharts.Geared"
         mc:Ignorable="d"
         Title="Simulated Workload" Height="512" Width="768">
     <Grid>
@@ -11,11 +13,32 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="200" />
         </Grid.RowDefinitions>
-        <Label Margin="5" FontSize="12" Content="{Binding PseudoResult}"/>
+        <!--AnimationsSpeed="0:0:0.2"-->
+        <lvc:CartesianChart Grid.Row="0" AnimationsSpeed="0:0:0.1" DisableAnimations="True"  Hoverable="False" DataTooltip="{x:Null}">
+            <lvc:CartesianChart.Series>
+                <geared:GLineSeries Values="{Binding ChartValues}" 
+                                PointGeometry="{x:Null}" 
+                                LineSmoothness="0"
+                                StrokeThickness="2" 
+                                Stroke="#F34336"
+                                Fill="Transparent"/>
+            </lvc:CartesianChart.Series>
+            <lvc:CartesianChart.AxisX>
+                <lvc:Axis LabelFormatter="{Binding DateTimeFormatter}" 
+                          MaxValue="{Binding AxisMax}" 
+                          MinValue="{Binding AxisMin}"
+                          Unit="{Binding AxisUnit}">
+                    <lvc:Axis.Separator>
+                        <lvc:Separator Step="{Binding AxisStep}" />
+                    </lvc:Axis.Separator>
+                </lvc:Axis>
+            </lvc:CartesianChart.AxisX>
+        </lvc:CartesianChart>
+        <!--<Label Margin="5" FontSize="12" Content="{Binding PseudoResult}"/>
         <DockPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Label DockPanel.Dock="Left" FontSize="20" Content="Performance:"/>
             <Label DockPanel.Dock="Right" FontSize="20" Content="{Binding PerformanceValue}"/>
-        </DockPanel>
+        </DockPanel>-->
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Grid.Row="1" Orientation="Horizontal">
             <Button IsEnabled="{Binding IsConfigurable}" Content="Start" Height="50" Width="80" Command="{Binding Path=StartBenchCommand}"></Button>
             <Button Content="Stop" Margin="20 0 0 0" Height="50" Width="80" Command="{Binding Path=StopStopCommand}"></Button>
