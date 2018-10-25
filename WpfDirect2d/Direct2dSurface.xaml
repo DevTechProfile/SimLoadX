@@ -1,0 +1,22 @@
+﻿<UserControl x:Name="Direct2D" x:Class="WpfDirect2D.Direct2DSurface"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:directX="clr-namespace:Microsoft.Wpf.Interop.DirectX;assembly=Microsoft.Wpf.Interop.DirectX"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300" ClipToBounds="True"
+             PreviewMouseWheel="ImageContainer_MouseWheel" 
+             PreviewMouseLeftButtonDown="ImageContainer_MouseLeftButtonDown" 
+             PreviewMouseLeftButtonUp="ImageContainer_MouseLeftButtonUp" 
+             PreviewMouseMove="ImageContainer_MouseMove">
+
+    <Grid Name="ImageContainer">
+        <Image Name="InteropHost" Stretch="Fill" Width="{Binding ActualWidth, ElementName=Direct2D, Mode=OneWay}" Height="{Binding ActualHeight, ElementName=Direct2D, Mode=OneWay}"
+               LayoutTransform="{Binding ElementName=Direct2D, Path=AxisTransform}" IsHitTestVisible="False">
+            <Image.Source>
+                <directX:D3D11Image x:Name="InteropImage" IsFrontBufferAvailableChanged="InteropImage_IsFrontBufferAvailableChanged" />
+            </Image.Source>
+        </Image>
+    </Grid>
+</UserControl>

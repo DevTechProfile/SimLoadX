@@ -1,7 +1,4 @@
-﻿using LiveCharts;
-using LiveCharts.Configurations;
-using LiveCharts.Geared;
-using Prism.Commands;
+﻿using Prism.Commands;
 using Prism.Mvvm;
 using System;
 using System.Collections.Generic;
@@ -12,7 +9,10 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
+using WpfDirect2D.Shapes;
 
 namespace SimLoadX
 {
@@ -38,32 +38,6 @@ namespace SimLoadX
         private LimitedConcurrencyLevelTaskScheduler _lcts;
         private string _dataPacketSize;
         private bool _isConfigurable;
-        private double _axisMax;
-        private double _axisMin;
-
-        public GearedValues<MeasureModel> ChartValues { get; set; }
-        public Func<double, string> DateTimeFormatter { get; set; }
-        public double AxisStep { get; set; }
-        public double AxisUnit { get; set; }
-
-        public double AxisMax
-        {
-            get { return _axisMax; }
-            set
-            {
-                _axisMax = value;
-                RaisePropertyChanged();
-            }
-        }
-        public double AxisMin
-        {
-            get { return _axisMin; }
-            set
-            {
-                _axisMin = value;
-                RaisePropertyChanged();
-            }
-        }
 
         public string PerformanceValue
         {
@@ -125,6 +99,8 @@ namespace SimLoadX
             set { _dataPacketSize = value; RaisePropertyChanged(); }
         }
 
+        public List<IShape> Geometries { get; private set; }
+
         public ICommand StartBenchCommand { get; }
 
         public ICommand StopStopCommand { get; }
@@ -151,33 +127,33 @@ namespace SimLoadX
 
         private void SetChartProperties()
         {
-            var mapper = Mappers.Xy<MeasureModel>()
-                .X(model => model.DateTime.Ticks)   //use DateTime.Ticks as X
-                .Y(model => model.Value);           //use the value property as Y
+            //var mapper = Mappers.Xy<MeasureModel>()
+            //    .X(model => model.DateTime.Ticks)   //use DateTime.Ticks as X
+            //    .Y(model => model.Value);           //use the value property as Y
 
-            //lets save the mapper globally.
-            Charting.For<MeasureModel>(mapper);
+            ////lets save the mapper globally.
+            //Charting.For<MeasureModel>(mapper);
 
-            //the values property will store our values array
-            ChartValues = new GearedValues<MeasureModel>();
-            ChartValues.WithQuality(Quality.Low);
+            ////the values property will store our values array
+            //ChartValues = new GearedValues<MeasureModel>();
+            //ChartValues.WithQuality(Quality.Low);
 
-            //lets set how to display the X Labels
-            DateTimeFormatter = value => new DateTime((long)value).ToString("mm:ss");
+            ////lets set how to display the X Labels
+            //DateTimeFormatter = value => new DateTime((long)value).ToString("mm:ss");
 
-            //AxisStep forces the distance between each separator in the X axis
-            AxisStep = TimeSpan.FromSeconds(1).Ticks;
-            //AxisUnit forces lets the axis know that we are plotting seconds
-            //this is not always necessary, but it can prevent wrong labeling
-            AxisUnit = TimeSpan.TicksPerSecond;
+            ////AxisStep forces the distance between each separator in the X axis
+            //AxisStep = TimeSpan.FromSeconds(1).Ticks;
+            ////AxisUnit forces lets the axis know that we are plotting seconds
+            ////this is not always necessary, but it can prevent wrong labeling
+            //AxisUnit = TimeSpan.TicksPerSecond;
 
             SetAxisLimits(DateTime.UtcNow);
         }
 
         private void SetAxisLimits(DateTime now)
         {
-            AxisMax = now.Ticks + TimeSpan.FromSeconds(1).Ticks; // lets force the axis to be 1 second ahead
-            AxisMin = now.Ticks - TimeSpan.FromSeconds(8).Ticks; // and 8 seconds behind
+            //AxisMax = now.Ticks + TimeSpan.FromSeconds(1).Ticks; // lets force the axis to be 1 second ahead
+            //AxisMin = now.Ticks - TimeSpan.FromSeconds(8).Ticks; // and 8 seconds behind
         }
 
         private Coordinate[] SetPoints()
@@ -213,10 +189,45 @@ namespace SimLoadX
 
             Task.Factory.StartNew(() =>
             {
+                const int numLines = 100;
+                var valueList = new List<int>(numLines);
+
                 while (!_cts.IsCancellationRequested)
                 {
-                    Thread.Sleep(10);
+                    Thread.Sleep(16);
                     UpdateChart(1);
+                    
+                    var line = new LineShape
+                    {
+                        FillColor = Colors.Blue,
+                        StrokeColor = Colors.Blue,
+                        SelectedColor = Colors.PaleVioletRed,
+                        StrokeWidth = 1f,
+                        IsLineClosed = false
+                    };
+
+                    var value = _random.Next(100, 300);
+
+                    // Manage data to visualize
+                    if (valueList.Count == numLines)
+                    {
+                        valueList.RemoveAt(0);
+                        valueList.Add(value);
+                    }
+                    else
+                    {
+                        valueList.Add(value);
+                    }
+
+                    line.LineNodes.AddRange(valueList.Select((val, i) => new Point(i * 1024 / numLines, val)));
+
+                    var geometryList = new List<IShape>
+                    {
+                        line
+                    };
+
+                    Geometries = new List<IShape>(geometryList);
+                    RaisePropertyChanged(nameof(Geometries));
                 }
             });
 
@@ -240,19 +251,19 @@ namespace SimLoadX
 
         private void UpdateChart(int x)
         {
-            var now = DateTime.UtcNow;
+            //var now = DateTime.UtcNow;
 
-            ChartValues.Add(new MeasureModel
-            {
-                DateTime = now,
-                Value = _random.NextDouble()//Math.Round(1E06 / x.Item1, 2)
-            });
+            //ChartValues.Add(new MeasureModel
+            //{
+            //    DateTime = now,
+            //    Value = _random.NextDouble()//Math.Round(1E06 / x.Item1, 2)
+            //});
 
-            SetAxisLimits(now);
+            //SetAxisLimits(now);
 
-            //lets only use the last 150 values
-            if (ChartValues.Count >= 500)
-                ChartValues.RemoveAt(0);
+            ////lets only use the last 150 values
+            //if (ChartValues.Count >= 100)
+            //    ChartValues.RemoveAt(0);
         }
 
         private void UpdatePerformanceValue(Tuple<double, double> x)

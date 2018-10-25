@@ -8,11 +8,14 @@ namespace SimLoadX
     {
         public static IObservable<T> SampleByInterval<T>(this IObservable<T> observable, TimeSpan interval)
         {
+            var latestCache = default(T);
+            observable.Subscribe(element => latestCache = element);
+
             return Observable.Generate(0, // initialState
                                         x => true, //condition
                                         x => x, //iterate
                                         x => x, //resultSelector
-                                        x => interval).ObserveOn(new EventLoopScheduler()).CombineWithLatest(observable, (clock, element) => element);
+                                        x => interval).ObserveOn(new EventLoopScheduler()).Select(x => latestCache);
         }
 
         /// <summary>
