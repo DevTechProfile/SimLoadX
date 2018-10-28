@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.Reactive.Subjects;
+using System.Windows;
 
 namespace SimLoadX
 {
@@ -7,10 +8,18 @@ namespace SimLoadX
     /// </summary>
     public partial class MainWindow : Window
     {
+       private ISubject<Size> _sizeStream;
+
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainViewModel();
+            _sizeStream = new Subject<Size>();
+            DataContext = new MainViewModel(_sizeStream);
+        }
+
+        private void Grid_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            _sizeStream.OnNext(e.NewSize);
         }
     }
 }

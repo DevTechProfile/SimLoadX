@@ -38,6 +38,9 @@ namespace SimLoadX
         private LimitedConcurrencyLevelTaskScheduler _lcts;
         private string _dataPacketSize;
         private bool _isConfigurable;
+        private ISubject<Size> _sizeStream;
+        private double _chartWidth;
+        private double _chartHeight;
 
         public string PerformanceValue
         {
@@ -107,8 +110,11 @@ namespace SimLoadX
 
         public ICommand DataPacketSizeChangedCommand { get; }
 
-        public MainViewModel()
+        public MainViewModel(ISubject<Size> sizeStream)
         {
+            _sizeStream = sizeStream;
+            _sizeStream.Subscribe(SetLiveChartSize);
+
             // Set defaults
             PerformanceValue = double.NaN.ToString();
             NumberOfTasks = "8";
@@ -123,6 +129,12 @@ namespace SimLoadX
             StartBenchCommand = new DelegateCommand(OnStartBenchmark);
             StopStopCommand = new DelegateCommand(OnStopBenchmark);
             DataPacketSizeChangedCommand = new DelegateCommand<object>(x => OnDataPacketSizeChanged(x));
+        }
+
+        private void SetLiveChartSize(Size size)
+        {
+            _chartWidth = size.Width;
+            _chartHeight = size.Height;
         }
 
         private void SetChartProperties()
@@ -189,6 +201,9 @@ namespace SimLoadX
 
             Task.Factory.StartNew(() =>
             {
+                const double xAxisOffset = 40;
+                const double yAxisOffset = 45;
+
                 const int numLines = 100;
                 var valueList = new List<int>(numLines);
 
@@ -206,7 +221,7 @@ namespace SimLoadX
                         IsLineClosed = false
                     };
 
-                    var value = _random.Next(100, 300);
+                    var value = _random.Next(7, (int)(_chartHeight - xAxisOffset));
 
                     // Manage data to visualize
                     if (valueList.Count == numLines)
@@ -219,7 +234,7 @@ namespace SimLoadX
                         valueList.Add(value);
                     }
 
-                    line.LineNodes.AddRange(valueList.Select((val, i) => new Point(i * 1024 / numLines, val)));
+                    line.LineNodes.AddRange(valueList.Select((val, i) => new Point(yAxisOffset + (double)i * (_chartWidth - yAxisOffset) / (double)numLines, val)));
 
                     var geometryList = new List<IShape>
                     {

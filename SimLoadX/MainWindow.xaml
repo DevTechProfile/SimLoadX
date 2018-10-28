@@ -13,10 +13,12 @@
             <RowDefinition Height="*" />
             <RowDefinition Height="200" />
         </Grid.RowDefinitions>
-        <oxy:Plot Title="{Binding PlotTitle}" Grid.Row="0">
-            <oxy:LineSeries Color="Chocolate" MarkerFill="Black" MarkerType="Circle" ItemsSource="{Binding Path=CurrentPath}" DataFieldX="X" DataFieldY="Y" />
-        </oxy:Plot>
-        <wpfDirect2D:Direct2DSurface Grid.Row="0" Shapes="{Binding Geometries}" RenderOrigin="Center" IsMouseWheelZoomEnabled="False" IsPanningEnabled="False" UseRealizations="True" />
+        <Grid Grid.Row="0" SizeChanged="Grid_SizeChanged">
+            <oxy:Plot Title="{Binding PlotTitle}">
+                <oxy:LineSeries Color="Chocolate" MarkerFill="Black" MarkerType="Circle" ItemsSource="{Binding Path=CurrentPath}" DataFieldX="X" DataFieldY="Y" />
+            </oxy:Plot>
+            <wpfDirect2D:Direct2DSurface Shapes="{Binding Geometries}" RenderOrigin="TopLeft" IsMouseWheelZoomEnabled="False" IsPanningEnabled="True" UseRealizations="True" />
+        </Grid>
         <!--<Label Margin="5" FontSize="12" Content="{Binding PseudoResult}"/>
         <DockPanel Grid.Row="0" HorizontalAlignment="Center" VerticalAlignment="Center">
             <Label DockPanel.Dock="Left" FontSize="20" Content="Performance:"/>

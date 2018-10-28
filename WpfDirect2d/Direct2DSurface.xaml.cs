@@ -238,14 +238,24 @@ namespace WpfDirect2D
 
             //get a Texture2D resource from Direct3D11 to render to (back buffer)
             var texture = resource.QueryInterface<SharpDX.Direct3D11.Texture2D>();
+            PresentationSource source = PresentationSource.FromVisual(this);
+
+            float dpiX = 96.0f;
+            float dpiY = 96.0f;
+
+            if (source != null)
+            {
+                dpiX = 96.0f * (float)source.CompositionTarget.TransformToDevice.M11;
+                dpiY = 96.0f * (float)source.CompositionTarget.TransformToDevice.M22;
+            }
 
             //from the texture create a new surface to use as a render target
             using (var surface = texture.QueryInterface<SharpDX.DXGI.Surface1>())
             {
                 var properties = new RenderTargetProperties
                 {
-                    DpiX = 96,
-                    DpiY = 96,
+                    DpiX = dpiX,
+                    DpiY = dpiY,
                     MinLevel = FeatureLevel.Level_DEFAULT,
                     PixelFormat = new PixelFormat(SharpDX.DXGI.Format.B8G8R8A8_UNorm, AlphaMode.Premultiplied),
                     Type = RenderTargetType.Default,
